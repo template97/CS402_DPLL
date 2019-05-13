@@ -4,26 +4,32 @@ import operator
 
 VAR_NUM = 0
 CLS_NUM = 0
-MAX_ITER = 20
-default_file = "./uf20-91.tar/uf20-01.cnf"
+MAX_ITER = 1000
+default_path = "./uf20-91.tar/"
 
-_input = [] # pure input formula
+# pure input formula
 P_NONE = 0
 P_POS = 1
 P_NEG = 1 << 1
 P_NOT = 1 << 2
 
-def main():
-	get_input()
-	FA = _input
+def main(num):
+	global VAR_NUM, CLS_NUM
 
-	(result, new_FA, new_A) = DPLL(FA, [], 0)
+
+	_input = []
+	FA = []
+	(VAR_NUM, CLS_NUM, _input) = get_input(num)
+
+	FA = _input[:]
+
+	(result, __FA, __A) = DPLL(FA, [], 0)
 
 	if not result:
 		print("s UNSATISFIABLE")
 	else: 
 		print("s SATISFIABLE")
-		print(new_A)
+		print(__A)
 
 def DPLL(FA, A, lev):
 	global VAR_NUM, CLS_NUM
@@ -38,6 +44,7 @@ def DPLL(FA, A, lev):
 		#print(new_A)
 		FA_temp = new_FA[:]
 		pure = []
+		count = []
 		(pure, count) = variable_count(new_FA, new_A)			# count variable appearing
 
 		(result, new_FA, new_A) = pure_literal_elimination(new_FA, new_A, pure)	# eiliminate pure literal
@@ -64,39 +71,67 @@ def select_and_branch(_FA, _A, count, lev):
 	global VAR_NUM, CLS_NUM
 	db = False
 
-	print(lev, end = ' ')
+	#print(_A)
+	if(db): print(lev, end = ' ')
 	#if(db): print("select and branch", A)
+	max_cnt = 0
+	min_cnt = 0
+	selected_var = 0
+	selected_cnt = 0
+	#print(count)
+	#print(_FA)
+	
+	for (_var, _cnt) in count.items():
+		if( _var not in _A and (-1 * _var) not in _A and _var != 0):
+			#print(_var, end = ' ')
+			if(_cnt >= max_cnt):
+				max_cnt = _cnt
+				if(max_cnt >= abs(min_cnt)):
+					selected_var = _var
+					selected_cnt = _cnt
+
+			if(_cnt <= min_cnt):
+				min_cnt = _cnt
+				if(abs(min_cnt) > max_cnt):
+					selected_var = _var
+					selected_cnt = _cnt
+
 	#count_sorted = sorted(count.items, key = abs(operator.itemgetter(1)), reverse = True)
 	
-	for (var, cnt) in sorted(count.items(), key =lambda x:abs(x[1])):#, reverse = True):
-		if (var != 0) and (var not in _A) and ((-1 * var) not in _A):
+	if( selected_cnt >= 0 ):
+		var = selected_var
+	elif( selected_cnt < 0):
+		var = selected_var * -1
+
+	FA = _FA[:]
+	A = _A[:]
+	new_FA = []
+	new_A = []
+	(result, new_FA, new_A) = add_and_check(FA, A, var)
+	if result:
+		if(db): print("[", var, "]")
+		(new_result, new_FA, new_A) = DPLL(new_FA, new_A, lev + 1)
+		if new_result:
+			if(db): print("select : ", var, "succeed")
+			if(db): print("good 3")
+			return (new_result, new_FA, new_A)
+
+	FA = _FA[:]
+	A = _A[:]
+	new_FA = []
+	new_A = []
+	#print(lev,var, "- 2 ", A)
+	(result, new_FA, new_A) = add_and_check(FA, A, (-1 * var))
+	if result:
+		if(db): print("[", (-1 * var), "]")
+		(new_result, new_FA, new_A) = DPLL(new_FA, new_A, lev +1)
+		if new_result:
+			if(db): print("select : ", (-1 *var), "succeed")
+			if(db): print("good 4")
+			return (new_result, new_FA, new_A)
+
 			
-			FA = _FA[:]
-			A = _A[:]
-			new_FA = []
-			new_A = []
-			#print(lev, var, "- 1 ", A)
-			(result, new_FA, new_A) = add_and_check(FA, A, var)
-			if result:
-				(new_result, new_FA, new_A) = DPLL(new_FA, new_A, lev + 1)
-				if new_result:
-					if(db and cnt > 0): print("select : ", var, "succeed")
-					if(db): print("good 3")
-					return (new_result, new_FA, new_A)
-			
-			FA = _FA[:]
-			A = _A[:]
-			new_FA = []
-			new_A = []
-			#print(lev,var, "- 2 ", A)
-			(result, new_FA, new_A) = add_and_check(FA, A, (-1 * var))
-			if result:
-				(new_result, new_FA, new_A) = DPLL(new_FA, new_A, lev +1)
-				if new_result:
-					if(db and cnt <= 0): print("select : ", (-1 *var), "succeed")
-					if(db): print("good 4")
-					return (new_result, new_FA, new_A)
-	if(db): print("wrong 4")
+	if(db): print("wrong :", lev, "[", var, "]")
 	return (False, FA, A)
 
 
@@ -104,29 +139,29 @@ def variable_count(FA, A):
 	global VAR_NUM, CLS_NUM, P_NEG, P_POS, P_NONE, P_NOT
 	db = False
 
-	pure = [P_NONE for j in range(VAR_NUM + 1)]	
-	count = dict() #0 for j in range(VAR_NUM + 1)]
+	_pure = [P_NONE for j in range(VAR_NUM + 1)]	
+	_count = dict() #0 for j in range(VAR_NUM + 1)]
 
 	for j in range(VAR_NUM + 1):
-		count[j] = 0
+		_count[j] = 0
 
 	for clause in FA:
 		for var in clause:
 			abs_val = abs(var)
-		
-			if(pure[abs_val] == P_NONE):
+
+			if(_pure[abs_val] == P_NONE):
 				if(var > 0):
-					pure[abs_val] = P_POS
+					_pure[abs_val] = P_POS
 				else:
-					pure[abs_val] = P_NEG
-			elif( (pure[abs_val] == P_POS and var < 0) or (pure[abs_val] == P_NEG and var > 0)):
-				pure[abs_val] = P_NOT
+					_pure[abs_val] = P_NEG
+			elif( (_pure[abs_val] == P_POS and var < 0) or (_pure[abs_val] == P_NEG and var > 0)):
+				_pure[abs_val] = P_NOT
 
 			if(var < 0):
-				count[abs_val] -= 1
+				_count[abs_val] -= 1
 			else:
-				count[abs_val] += 1
-	return (pure, count)
+				_count[abs_val] += 1
+	return (_pure, _count)
 
 def pure_literal_elimination(FA, A, pure):
 	global VAR_NUM, CLS_NUM , P_NONE, P_POS, P_NEG, P_NOT
@@ -235,20 +270,19 @@ def add_and_check(_FA, _A, num):
 		return apply_A_by_guess(FA, A)
 
 
-def get_input():
+def get_input(num):
 	global VAR_NUM, CLS_NUM, default_file, _input
 
 	db = False
-	if len(sys.argv) == 1:
-		file_name = default_file
-		#if(db): print("wrong input #0")
-		#exit(-1)
-	else:
+	if num == 0: # input exist
 		file_name = sys.argv[1]
-
+	else:
+		file_name = default_path + "uf20-0" + str(num) + ".cnf"
+	#print(file_name)
 	phase = 0
 	cls_cnt = 0
 
+	_inp = []
 	with open(file_name, 'r') as f:
 
 		for buf in f:
@@ -263,8 +297,8 @@ def get_input():
 					if(db): print("wrong input #2")
 					exit(-1)
 				args = buf.split()
-				VAR_NUM = int(args[2])
-				CLS_NUM = int(args[3])
+				v_num = int(args[2])
+				c_num = int(args[3])
 
 				phase += 1
 				if(db): print(buf)
@@ -282,22 +316,29 @@ def get_input():
 						if(val == 0):
 							break
 						abs_val = abs(val)
-						if(abs_val > VAR_NUM):
+						if(abs_val > v_num):
 							if(db): print("wrong input #5")
 							exit(-1)
 						tmp.append(val)
 		
-					_input.append(tmp)
+					_inp.append(tmp)
 					if(db): print(tmp)
 				except ValueError:
 					if(db): print("wrong input #4")
 					exit(-1)
-				if(cls_cnt == CLS_NUM):
+				if(cls_cnt == c_num):
 					break
 
 	if(db): print("complete input sequence")
-	if(db): print(_input)
+	if(db): print(_inp)
+	#print(v_num, c_num)
+	return (v_num, c_num, _inp)
 	# input end 
 
-if __name__ == '__main__':
-	main()
+if __name__ == '__main__':	
+	if len(sys.argv) != 1:
+		main(0)
+	else:
+		for i in range(1,1000):
+			print(i, end = ' ')
+			main(i)
