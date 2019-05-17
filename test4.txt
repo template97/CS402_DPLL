@@ -1,0 +1,7 @@
+c    Yuju's test case 1
+c
+p cnf 3 4
+1 -2
+2 3
+-1 -2 3
+-3
