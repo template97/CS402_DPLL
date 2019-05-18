@@ -1,11 +1,9 @@
 import numpy as np
 
-y = np.zeros(5)
+y = [2,3,1,3,0]
 
-x = y
+x = np.array(y)
 
-if(np.amax(x) == 0):
-	print("#")
 (a) = np.where(x == np.amax(x) ) 
 print(a[0][0])
 

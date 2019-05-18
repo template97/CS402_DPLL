@@ -46,50 +46,17 @@ def DPLL(FA, A, lev):
 	#print(lev, end = ' ')
 	if FA == []:
 		return (True, FA, A)
-
-	# FA_temp = []
-	A_len = -1
+		
 	new_FA = FA #copy.deepcopy(FA)
 	new_A = A #A[:]
 
-	at_least = True
-	while(at_least or A_len != len(new_A)): #FA_temp != new_FA):
-		#FA_temp = copy.deepcopy(new_FA)
-		A_len = len(new_A)
-		pure = []
-		count = []
-		
-		# (pure, count) = variable_count(new_FA, new_A)			# count variable appearing
-
-		# (result, new_FA, new_A) = pure_literal_elimination(new_FA, new_A, pure)	# eiliminate pure literal
-		# if not result:
-		# 	# if(db): print("wrong 1")
-		# 	return (False, new_FA, new_A)
-		# elif(new_FA == []):
-		# 	# if(db): print("good 1")
-		# 	return (True, new_FA, new_A)
-
-
-
-		(result, new_FA, new_A) = unit_propagation(new_FA, new_A)			# threat unit clause
-		if not result:
-			# if(db): print("wrong 2")
-			return (False, new_FA, new_A)
-		elif(new_FA == []):
-			# if(db): print("good 2")
-			return (True, new_FA, new_A)
-
-		# if not is_res_ok(new_FA):
-		# 	print("rf", end = ' ')#, new_FA)
-		# 	return (False, new_FA, new_A)
-
-		at_least = False
-
-	# if(db): print("\nafter propagation", new_A, "\n", new_FA)
-	
-	#_FA = new_FA[:]
-	#_A = new_A[:]
-
+	(result, new_FA, new_A) = unit_propagation(new_FA, new_A)			# threat unit clause
+	if not result:
+		# if(db): print("wrong 2")
+		return (False, new_FA, new_A)
+	elif(new_FA == []):
+		# if(db): print("good 2")
+		return (True, new_FA, new_A)
 	# if not is_res_ok(new_FA):
 	# 	print("resolution fail2")#, new_FA)
 	# 	return (False, new_FA, new_A)
@@ -129,8 +96,6 @@ def is_res_ok(FA): # check completeness
 
 def resolution(cls1, cls2, var, FA):
 	#n = exist[VAR_NUM + 1 + (-1 * var)]
-
-
 	cls1.remove(var)
 	cls2.remove(-1 * var)
 
@@ -167,11 +132,6 @@ def select_and_branch(FA, A, lev):
 			else:
 				VSIDS[var] = 0
 	var *= -1
-	#print(var, end = ' ')
-	# FA = copy.deepcopy(_FA)
-	# A = _A[:]
-	# new_FA = []
-	# new_A = []
 	(result, new_FA, new_A) = add_and_check(FA, A, var)
 	if result:
 		(new_result, new_FA, new_A) = DPLL(new_FA, new_A, lev + 1)
@@ -179,18 +139,12 @@ def select_and_branch(FA, A, lev):
 			# if(db): print("good 3")
 			return (new_result, new_FA, new_A)
 
-	# FA = copy.deepcopy(_FA)
-	# A = _A[:]
-	# new_FA = []
-	# new_A = []
 	(result, new_FA, new_A) = add_and_check(FA, A, (-1 * var))
 	if result:
 		(new_result, new_FA, new_A) = DPLL(new_FA, new_A, lev +1)
 		if new_result:
 			# if(db): print("good 4")
 			return (new_result, new_FA, new_A)
-
-			
 	# if(db): print("wrong :", lev, "[", var, "]")
 	return (False, FA, A)
 
@@ -249,14 +203,20 @@ def unit_propagation(new_FA, new_A):
 	# new_FA = copy.deepcopy(FA)
 	# new_A = A[:]
 	result = True
-
-	for clause in new_FA:
-		if len(clause) == 1:
-			# if(db): print(clause, "is unit clause")#, " of ", A)
-			(result, new_FA, new_A) = add_and_check(new_FA, new_A, clause[0])
-			return (result, new_FA, new_A)
-
+	check = True
+	while(check):
+		check = False
+		for clause in new_FA:
+			if len(clause) == 1:
+				# if(db): print(clause, "is unit clause")#, " of ", A)
+				check = True
+				(result, new_FA, new_A) = add_and_check(new_FA, new_A, clause[0])
+				if not result:
+					return (result, new_FA, new_A)
+				break;
 	return (result, new_FA, new_A)
+
+	# return (result, new_FA, new_A)
 
 def apply_A_by_guess(_FA, _A, _var):
 	global VAR_NUM, CLS_NUM, VSIDS
