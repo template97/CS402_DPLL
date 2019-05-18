@@ -31,7 +31,7 @@ def main(num):
 	(result, __FA, __A) = DPLL(FA, [], 0)
 
 	if not result:
-		print("s UNSATISFIABLE@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
+		print("s UNSATISFIABLE")
 		return False
 	else: 
 		print("s SATISFIABLE")
@@ -46,7 +46,7 @@ def DPLL(FA, A, lev):
 	#print(lev, end = ' ')
 	if FA == []:
 		return (True, FA, A)
-		
+
 	new_FA = FA #copy.deepcopy(FA)
 	new_A = A #A[:]
 
@@ -78,7 +78,6 @@ def is_res_ok(FA): # check completeness
 		res = False
 		exist = [-1 for j in range(VAR_NUM * 2 + 2)]
 
-		i = 0
 		for clause in new_FA:
 			if clause == []:
 				return False
@@ -90,7 +89,6 @@ def is_res_ok(FA): # check completeness
 				exist[VAR_NUM + 1 + var] = i
 			if res:
 				break
-			i += 1
 
 	return True
 
@@ -215,8 +213,6 @@ def unit_propagation(new_FA, new_A):
 					return (result, new_FA, new_A)
 				break;
 	return (result, new_FA, new_A)
-
-	# return (result, new_FA, new_A)
 
 def apply_A_by_guess(_FA, _A, _var):
 	global VAR_NUM, CLS_NUM, VSIDS
