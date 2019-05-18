@@ -7,10 +7,8 @@ import copy
 VAR_NUM = 0
 CLS_NUM = 0
 MAX_ITER = 1000
-# default_path = "../testcases/uf20-91.tar/"
-# default_format = "uf20-0"
-default_path = "../testcases/uf100-430.tar/"#uf20-91.tar/"
-default_format = "uf100-0"#uf20-0"
+default_path = "../testcases/uuf100-430.tar/"
+default_format = "uuf100-0"
 # pure input formula
 P_NONE = 0
 P_POS = 1
@@ -31,27 +29,25 @@ def main(num):
 
 	if not result:
 		print("s UNSATISFIABLE@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
-		return False
 	else: 
 		print("s SATISFIABLE")
-		return True
-		# for a in __A:
-		# 	print(a, end = ' ')
+		for a in __A:
+			print(a, end = ' ')
 
 
 def DPLL(FA, A, lev):
 	global VAR_NUM, CLS_NUM
 	db = True
 	# print("\nDPLL start", A, "\n",FA, "\n")
-	#print(lev, end = ' ')
+
 	if FA == []:
 		return (True, FA, A)
 
 	FA_temp = []
 	A_temp = []
 
-	new_FA = FA #copy.deepcopy(FA)
-	new_A = A #A[:]
+	new_FA = copy.deepcopy(FA)
+	new_A = A[:]
 
 	at_least = True
 	while(at_least or A_temp != new_A): #FA_temp != new_FA):
@@ -79,9 +75,9 @@ def DPLL(FA, A, lev):
 			# if(db): print("good 2")
 			return (True, new_FA, new_A)
 
-		# if not is_res_ok(new_FA):
-		# 	#print("resolution fail")#, new_FA)
-		# 	return (False, new_FA, new_A)
+		if not is_res_ok(new_FA):
+			#print("resolution fail")#, new_FA)
+			return (False, new_FA, new_A)
 
 		at_least = False
 
@@ -173,9 +169,9 @@ def select_and_branch(FA, A, count, lev):
 					selected_cnt = _cnt
 	
 	if( selected_cnt >= 0 ):
-		var = selected_var# * -1
-	elif( selected_cnt < 0):
 		var = selected_var * -1
+	elif( selected_cnt < 0):
+		var = selected_var #* -1
 
 	# FA = copy.deepcopy(_FA)
 	# A = _A[:]
@@ -237,16 +233,18 @@ def pure_literal_elimination(FA, A, pure):
 	# db = False
 
 	result = True
-	new_FA = FA #copy.deepcopy(FA)
-	new_A = A #[:]
+	new_FA = copy.deepcopy(FA)
+	new_A = A[:]
 	for var in range(1, VAR_NUM+1):
 		if(pure[var] == P_POS):
-			# if(db): print(var, "is pure")
+			# if(db): 
+			print(var, "is pure")
 			(result, new_FA, new_A) = add_and_check(new_FA, new_A, var)
 			return (result, new_FA, new_A)
 		
 		if(pure[var] == P_NEG):
-			# if(db): print((-1 * var), "is pure")
+			# if(db): 
+			print((-1 * var), "is pure")
 			(result, new_FA, new_A) = add_and_check(new_FA, new_A, (-1 * var))
 			return (result, new_FA, new_A)
 
@@ -262,7 +260,8 @@ def unit_propagation(new_FA, new_A):
 
 	for clause in new_FA:
 		if len(clause) == 1:
-			# if(db): print(clause, "is unit clause")#, " of ", A)
+			# if(db): 
+			print(clause, "is unit clause")#, " of ", A)
 			(result, new_FA, new_A) = add_and_check(new_FA, new_A, clause[0])
 			return (result, new_FA, new_A)
 
@@ -274,8 +273,8 @@ def apply_A_by_guess(_FA, _A):
 	# db = False
 
 	new_FA = []
-	FA = _FA #copy.deepcopy(_FA)
-	A = _A #[:]
+	FA = copy.deepcopy(_FA)
+	A = _A[:]
 	# if(db): print("apply_A_by_guess", FA, A)
 
 	
@@ -313,7 +312,7 @@ def add_and_check(_FA, _A, num):
 		print("error")
 		exit(-1)
 	elif (-1 * num) in _A:
-		#print(num, _A)
+		print(num, _A)
 		return (False, _FA, _A)
 	else:
 		A = _A[:]
@@ -401,22 +400,10 @@ if __name__ == '__main__':
 	if len(sys.argv) != 1:
 		main(0)
 	else:
-		start = time.time()
-		sat = 0
-		unsat = 0
-		for i in range(1, 100):
+		for i in range(1, 6):
 			print(i, end = ': ')
 			startTime = time.time()
-
-			if main(i):
-				sat += 1
-			else:
-				unsat += 1
-
+			main(i)
 			endTime = time.time() - startTime
-			print("time: %.5f" % endTime)
+			print("\ntime:", endTime)
 			print("")				
-		end = time.time() - start
-		print("\nTotal time: %.5f   SAT: %d UNSAT: %d" % (end, sat, unsat))
-		print("")				
-
