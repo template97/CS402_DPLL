@@ -47,16 +47,15 @@ def DPLL(FA, A, lev):
 	if FA == []:
 		return (True, FA, A)
 
-	FA_temp = []
-	A_temp = []
-
+	# FA_temp = []
+	A_len = -1
 	new_FA = FA #copy.deepcopy(FA)
 	new_A = A #A[:]
 
 	at_least = True
-	while(at_least or A_temp != new_A): #FA_temp != new_FA):
+	while(at_least or A_len != len(new_A)): #FA_temp != new_FA):
 		#FA_temp = copy.deepcopy(new_FA)
-		A_temp = new_A[:]
+		A_len = len(new_A)
 		pure = []
 		count = []
 		
@@ -81,7 +80,7 @@ def DPLL(FA, A, lev):
 			return (True, new_FA, new_A)
 
 		# if not is_res_ok(new_FA):
-		# 	#print("resolution fail")#, new_FA)
+		# 	print("rf", end = ' ')#, new_FA)
 		# 	return (False, new_FA, new_A)
 
 		at_least = False
@@ -149,33 +148,7 @@ def select_and_branch(FA, A, lev):
 	# if(db): 
 	
 	#print(lev, end = ' ')
-
 	# print(_FA, _A)
-
-	# max_cnt = 0
-	# min_cnt = 0
-	# selected_var = 0
-	# selected_cnt = 0
-	
-	# for (_var, _cnt) in count.items():
-	# 	if( _var not in A and (-1 * _var) not in A and _var != 0):
-	# 		#print(_var, end = ' ')
-	# 		if(_cnt >= max_cnt):
-	# 			max_cnt = _cnt
-	# 			if(max_cnt >= abs(min_cnt)):
-	# 				selected_var = _var
-	# 				selected_cnt = _cnt
-
-	# 		if(_cnt <= min_cnt):
-	# 			min_cnt = _cnt
-	# 			if(abs(min_cnt) > max_cnt):
-	# 				selected_var = _var
-	# 				selected_cnt = _cnt
-	
-	# if( selected_cnt >= 0 ):
-	# 	var = selected_var# * -1
-	# elif( selected_cnt < 0):
-	# 	var = selected_var * -1
 
 	#print(VSIDS, A)
 	while(True):
@@ -197,8 +170,8 @@ def select_and_branch(FA, A, lev):
 	#print(var, end = ' ')
 	# FA = copy.deepcopy(_FA)
 	# A = _A[:]
-	new_FA = []
-	new_A = []
+	# new_FA = []
+	# new_A = []
 	(result, new_FA, new_A) = add_and_check(FA, A, var)
 	if result:
 		(new_result, new_FA, new_A) = DPLL(new_FA, new_A, lev + 1)
@@ -208,8 +181,8 @@ def select_and_branch(FA, A, lev):
 
 	# FA = copy.deepcopy(_FA)
 	# A = _A[:]
-	new_FA = []
-	new_A = []
+	# new_FA = []
+	# new_A = []
 	(result, new_FA, new_A) = add_and_check(FA, A, (-1 * var))
 	if result:
 		(new_result, new_FA, new_A) = DPLL(new_FA, new_A, lev +1)
