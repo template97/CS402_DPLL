@@ -18,14 +18,15 @@ P_NEG = 1 << 1
 P_NOT = 1 << 2
 
 def main(num):
-	global VAR_NUM, CLS_NUM
+	global VAR_NUM, CLS_NUM, VSIDS, var_select
 
 	_input = []
 	FA = []
-	(VAR_NUM, CLS_NUM, _input) = get_input(num)
-
+	(VAR_NUM, CLS_NUM, _input, _count) = get_input(num)
+	VSIDS = np.zeros(VAR_NUM + 1)
 	#FA = copy.deepcopy(_input)
 	FA = _input
+	var_select = sorted(_count.items(), key=lambda x: x[1])
 
 	(result, __FA, __A) = DPLL(FA, [], 0)
 
@@ -38,9 +39,8 @@ def main(num):
 		# for a in __A:
 		# 	print(a, end = ' ')
 
-
 def DPLL(FA, A, lev):
-	global VAR_NUM, CLS_NUM
+	global VAR_NUM, CLS_NUM, VSIDS
 	db = True
 	# print("\nDPLL start", A, "\n",FA, "\n")
 	#print(lev, end = ' ')
@@ -59,15 +59,16 @@ def DPLL(FA, A, lev):
 		A_temp = new_A[:]
 		pure = []
 		count = []
-		(pure, count) = variable_count(new_FA, new_A)			# count variable appearing
+		
+		# (pure, count) = variable_count(new_FA, new_A)			# count variable appearing
 
-		(result, new_FA, new_A) = pure_literal_elimination(new_FA, new_A, pure)	# eiliminate pure literal
-		if not result:
-			# if(db): print("wrong 1")
-			return (False, new_FA, new_A)
-		elif(new_FA == []):
-			# if(db): print("good 1")
-			return (True, new_FA, new_A)
+		# (result, new_FA, new_A) = pure_literal_elimination(new_FA, new_A, pure)	# eiliminate pure literal
+		# if not result:
+		# 	# if(db): print("wrong 1")
+		# 	return (False, new_FA, new_A)
+		# elif(new_FA == []):
+		# 	# if(db): print("good 1")
+		# 	return (True, new_FA, new_A)
 
 
 
@@ -93,8 +94,7 @@ def DPLL(FA, A, lev):
 	# if not is_res_ok(new_FA):
 	# 	print("resolution fail2")#, new_FA)
 	# 	return (False, new_FA, new_A)
-	return select_and_branch(new_FA, new_A, count, lev)
-
+	return select_and_branch(new_FA, new_A, lev)
 
 def is_res_ok(FA): # check completeness
 	global VAR_NUM, CLS_NUM
@@ -143,40 +143,58 @@ def resolution(cls1, cls2, var, FA):
 	#cls1.extend(_cls)
 	FA.remove(cls2)
 
-
-def select_and_branch(FA, A, count, lev):
-	global VAR_NUM, CLS_NUM
+def select_and_branch(FA, A, lev):
+	global VAR_NUM, CLS_NUM, VSIDS,var_select
 	# db = False
 	# if(db): 
 	
-	#print(len(A), end = ' ')
+	#print(lev, end = ' ')
 
 	# print(_FA, _A)
-	max_cnt = 0
-	min_cnt = 0
-	selected_var = 0
-	selected_cnt = 0
-	
-	for (_var, _cnt) in count.items():
-		if( _var not in A and (-1 * _var) not in A and _var != 0):
-			#print(_var, end = ' ')
-			if(_cnt >= max_cnt):
-				max_cnt = _cnt
-				if(max_cnt >= abs(min_cnt)):
-					selected_var = _var
-					selected_cnt = _cnt
 
-			if(_cnt <= min_cnt):
-				min_cnt = _cnt
-				if(abs(min_cnt) > max_cnt):
-					selected_var = _var
-					selected_cnt = _cnt
+	# max_cnt = 0
+	# min_cnt = 0
+	# selected_var = 0
+	# selected_cnt = 0
 	
-	if( selected_cnt >= 0 ):
-		var = selected_var# * -1
-	elif( selected_cnt < 0):
-		var = selected_var * -1
+	# for (_var, _cnt) in count.items():
+	# 	if( _var not in A and (-1 * _var) not in A and _var != 0):
+	# 		#print(_var, end = ' ')
+	# 		if(_cnt >= max_cnt):
+	# 			max_cnt = _cnt
+	# 			if(max_cnt >= abs(min_cnt)):
+	# 				selected_var = _var
+	# 				selected_cnt = _cnt
 
+	# 		if(_cnt <= min_cnt):
+	# 			min_cnt = _cnt
+	# 			if(abs(min_cnt) > max_cnt):
+	# 				selected_var = _var
+	# 				selected_cnt = _cnt
+	
+	# if( selected_cnt >= 0 ):
+	# 	var = selected_var# * -1
+	# elif( selected_cnt < 0):
+	# 	var = selected_var * -1
+
+	#print(VSIDS, A)
+	while(True):
+		#print(np.amax(VSIDS), end = ' ')
+		if np.amax(VSIDS) == 0:
+			#print(var_select)
+			for var, __ in var_select:
+				if var not in A and (var * -1) not in A:
+					break
+			break
+		else:
+			a = np.where(VSIDS == np.amax(VSIDS)) 
+			var = a[0][0]
+			if var not in A and (var * -1) not in A:
+				break
+			else:
+				VSIDS[var] = 0
+	var *= -1
+	#print(var, end = ' ')
 	# FA = copy.deepcopy(_FA)
 	# A = _A[:]
 	new_FA = []
@@ -202,7 +220,6 @@ def select_and_branch(FA, A, count, lev):
 			
 	# if(db): print("wrong :", lev, "[", var, "]")
 	return (False, FA, A)
-
 
 def variable_count(FA, A):
 	global VAR_NUM, CLS_NUM, P_NEG, P_POS, P_NONE, P_NOT
@@ -268,39 +285,47 @@ def unit_propagation(new_FA, new_A):
 
 	return (result, new_FA, new_A)
 
-def apply_A_by_guess(_FA, _A):
-	global VAR_NUM, CLS_NUM, default_file
+def apply_A_by_guess(_FA, _A, _var):
+	global VAR_NUM, CLS_NUM, VSIDS
 
 	# db = False
 
 	new_FA = []
 	FA = _FA #copy.deepcopy(_FA)
 	A = _A #[:]
-	# if(db): print("apply_A_by_guess", FA, A)
+	# if(db):print("apply_A_by_guess", FA, A)
 
-	
+	failed = False
+	var_cls = np.array([False for j in range(VAR_NUM + 1)])
+
 	for _clause in FA:
 		clause = _clause[:]
 		remove_var = []
-		clause_SAT = False
 
-		for var in clause:
-			if var in A: # the clause is true !
-				clause_SAT = True
-				break
-			if (-1 * var) in A:
-				remove_var.append(var)
+		if _var in clause or (-1 * _var) in clause:
+			for v in clause:
+				var_cls[abs(v)] = True
 
-		if(not clause_SAT):
-			for var in remove_var:
-				clause.remove(var)
-			if clause == []:
-				# if(db): print("apply fail")#, FA)
-				return (False, FA, A)
+		if not failed:
+			if _var in clause:
+				__ = True
+			elif (-1 * _var) in clause:
+				clause.remove(-1 * _var)
+				if clause == []:
+					failed = True					
+				else:
+					new_FA.append(clause)
 			else:
-				new_FA.append(clause[:])
+				new_FA.append(clause)
 
-	return (True, new_FA, A)
+	if failed:
+		var_cls[abs(_var)] = False
+		VSIDS[var_cls] += 1
+		VSIDS *= 0.95
+		#rint(VSIDS)
+		return (False, FA, A)
+	else:
+		return (True, new_FA, A)
 
 def add_and_check(_FA, _A, num):
 	global VAR_NUM, CLS_NUM
@@ -310,7 +335,7 @@ def add_and_check(_FA, _A, num):
 	# if(db): print("add_and_check", A, num)
 
 	if num in _A:
-		print("error")
+		print("error", num, _A)
 		exit(-1)
 	elif (-1 * num) in _A:
 		#print(num, _A)
@@ -319,21 +344,7 @@ def add_and_check(_FA, _A, num):
 		A = _A[:]
 		A.append(num)
 		# print("add and check:",num, _FA)
-		return apply_A_by_guess(_FA, A)
-	
-	#A = list(set(A))
-
-	# temp = []
-	# for i in A:
-	# 	temp.append(abs(i))
-	# temp = list(set(temp))
-
-	# # if(db): print(A, temp)
-	# if( len(A) > len(temp)):
-	# 	return (False, FA, A)
-	# else:
-	# 	return 
-
+		return apply_A_by_guess(_FA, A, num)
 
 def get_input(num):
 	global VAR_NUM, CLS_NUM, default_file, _input
@@ -347,6 +358,7 @@ def get_input(num):
 	cls_cnt = 0
 
 	_inp = []
+	_count = dict()
 	with open(file_name, 'r') as f:
 
 		for buf in f:
@@ -364,6 +376,8 @@ def get_input(num):
 				v_num = int(args[2])
 				c_num = int(args[3])
 
+				for j in range(v_num + 1):
+					_count[j] = 0
 				phase += 1
 				# if(db): print(buf)
 			else:
@@ -385,6 +399,10 @@ def get_input(num):
 							exit(-1)
 						tmp.append(val)
 		
+						if(val < 0):
+							_count[abs_val] -= 1
+						else:
+							_count[abs_val] += 1
 					_inp.append(tmp)
 					# if(db): print(tmp)
 				except ValueError:
@@ -395,7 +413,7 @@ def get_input(num):
 
 	# if(db): print("complete input sequence")
 	# if(db): print(_inp)
-	return (v_num, c_num, _inp)
+	return (v_num, c_num, _inp, _count)
 	
 if __name__ == '__main__':	
 	if len(sys.argv) != 1:
@@ -404,7 +422,7 @@ if __name__ == '__main__':
 		start = time.time()
 		sat = 0
 		unsat = 0
-		for i in range(1, 100):
+		for i in range(1, 1001):
 			print(i, end = ': ')
 			startTime = time.time()
 
