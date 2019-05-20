@@ -1,3 +1,9 @@
+''' KAIST 2019 Spring 
+	CS 402 Introduction to Logic for Computer Science
+	DPLL project
+	20160400 Juhyeong Yu 
+	template97@kaist.ac.kr '''
+
 import sys
 import numpy as np
 import operator
