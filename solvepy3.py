@@ -37,6 +37,7 @@ def init_and_start(num):
 		print("v", end = ' ')
 		for a in __A:
 			print(a, end = ' ')
+		print("")
 		return True
 		
 def get_input(num):
